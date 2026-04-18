@@ -1,4 +1,4 @@
-# Regional TGW + NAT Gateway + S2S VPN (AWS <-> Azure)
+# TGW (Multi-AZ) + Regional NAT Gateway (Multi-AZ) 通信フロー確認 @ S2S VPN (AWS <-> Azure)
 
 ## 概要
 

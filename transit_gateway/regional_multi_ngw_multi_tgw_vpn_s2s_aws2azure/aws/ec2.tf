@@ -14,74 +14,6 @@ data "aws_ami" "al2023" {
 # VM02 -> VM01 の経路では EC2-c の ENI を TGW subnet RT から指す。
 # EC2-a は AZ-a 側の NAT instance として同等の役割をもたせる (検証/切替用)。
 # また削除時の Regional NAT GW の内部サブネット挙動確認にも利用する。
-resource "aws_security_group" "ec2" {
-  name        = "${var.project}-ec2-sg"
-  description = "EC2 NAT instance"
-  vpc_id      = aws_vpc.this.id
-  tags        = { Name = "${var.project}-ec2-sg" }
-}
-
-resource "aws_security_group_rule" "ec2_ingress_icmp" {
-  security_group_id = aws_security_group.ec2.id
-  type              = "ingress"
-  protocol          = "icmp"
-  from_port         = -1
-  to_port           = -1
-  cidr_blocks       = [var.vpc_cidr, var.azure_vnet_cidr]
-  description       = "ICMP from VPC and Azure"
-}
-
-resource "aws_security_group_rule" "ec2_ingress_ssh" {
-  security_group_id = aws_security_group.ec2.id
-  type              = "ingress"
-  protocol          = "tcp"
-  from_port         = 22
-  to_port           = 22
-  cidr_blocks       = [var.my_ip_cidr, var.vpc_cidr, var.azure_vnet_cidr]
-  description       = "SSH"
-}
-
-resource "aws_security_group_rule" "ec2_ingress_forward_azure" {
-  security_group_id = aws_security_group.ec2.id
-  type              = "ingress"
-  protocol          = "-1"
-  from_port         = 0
-  to_port           = 0
-  cidr_blocks       = [var.azure_vnet_cidr]
-  description       = "Forward from Azure VNet (NAT instance)"
-}
-
-resource "aws_security_group_rule" "ec2_egress_all" {
-  security_group_id = aws_security_group.ec2.id
-  type              = "egress"
-  protocol          = "-1"
-  from_port         = 0
-  to_port           = 0
-  cidr_blocks       = ["0.0.0.0/0"]
-  description       = "All outbound"
-}
-
-resource "aws_iam_role" "ssm" {
-  name = "${var.project}-ec2-ssm"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action    = "sts:AssumeRole"
-      Effect    = "Allow"
-      Principal = { Service = "ec2.amazonaws.com" }
-    }]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "ssm" {
-  role       = aws_iam_role.ssm.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-}
-
-resource "aws_iam_instance_profile" "ssm" {
-  name = "${var.project}-ec2-ssm"
-  role = aws_iam_role.ssm.name
-}
 
 locals {
   nat_instance_user_data = <<-EOT
@@ -142,4 +74,26 @@ resource "aws_eip" "ec2_a" {
   domain   = "vpc"
   instance = aws_instance.ec2_a.id
   tags     = { Name = "${var.project}-eip-ec2-a" }
+}
+
+resource "aws_iam_role" "ssm" {
+  name = "${var.project}-ec2-ssm"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = { Service = "ec2.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ssm" {
+  role       = aws_iam_role.ssm.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_instance_profile" "ssm" {
+  name = "${var.project}-ec2-ssm"
+  role = aws_iam_role.ssm.name
 }

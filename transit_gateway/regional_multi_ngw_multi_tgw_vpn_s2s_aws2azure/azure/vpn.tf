@@ -20,15 +20,6 @@
 #    AWS は tunnel inside address (169.254.21.2) からの BGP しか受け付けないため、
 #    custom_bgp_addresses.primary で明示的に指定する必要がある。
 #
-resource "azurerm_public_ip" "vpngw" {
-  name                = "${var.project}-vpngw-pip"
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  allocation_method   = "Static"
-  sku                 = "Standard"
-  zones               = ["1", "2", "3"]
-}
-
 resource "azurerm_virtual_network_gateway" "this" {
   name                = "${var.project}-vpngw"
   location            = azurerm_resource_group.this.location
@@ -55,6 +46,15 @@ resource "azurerm_virtual_network_gateway" "this" {
       apipa_addresses       = ["169.254.21.2"]
     }
   }
+}
+
+resource "azurerm_public_ip" "vpngw" {
+  name                = "${var.project}-vpngw-pip"
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  zones               = ["1", "2", "3"]
 }
 
 # AWS 側 VPN 出力が揃ってから apply (var で制御)

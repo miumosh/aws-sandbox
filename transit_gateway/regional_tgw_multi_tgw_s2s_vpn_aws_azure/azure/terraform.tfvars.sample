@@ -1,0 +1,13 @@
+# ====== Azure 側 Terraform 変数サンプル ======
+# cp terraform.tfvars.sample terraform.tfvars して編集
+
+# SSH 接続を許可する自分の IP (CIDR)
+my_ip_cidr = "xxx.xxx.xxx.xxx/32"
+
+# Azure VM admin パスワード
+# 要件: 12 文字以上、英大/英小/数字/記号のうち 3 種以上を含む
+vm_admin_password = "Passw0rd!Sample"
+
+# --- 段階 4 (AWS VPN apply 完了後に設定) ---
+# aws_vpn_tunnel1_address = "xxx.xxx.xxx.xxx"
+# aws_vpn_tunnel1_psk     = "xxxxxxxxxxxxxxxx"

@@ -1,0 +1,96 @@
+Log: /xxx/aws-sandbox/transit_gateway/regional_tgw_multi_tgw_s2s_vpn_aws_azure/scripts/logs/network_verify_20260418_1806.log
+============================================================
+ 0. SSH 準備
+============================================================
+  known_hosts から 20.63.177.124, 20.89.103.44 を削除...
+# Host 20.63.177.124 found: line 55
+# Host 20.63.177.124 found: line 56
+# Host 20.63.177.124 found: line 57
+/home/miyakei/.ssh/known_hosts updated.
+Original contents retained as /home/miyakei/.ssh/known_hosts.old
+# Host 20.89.103.44 found: line 55
+# Host 20.89.103.44 found: line 56
+# Host 20.89.103.44 found: line 57
+/home/miyakei/.ssh/known_hosts updated.
+Original contents retained as /home/miyakei/.ssh/known_hosts.old
+  WARNING: sshpass が未インストール。SSH 接続時にパスワード入力が必要
+  インストール: sudo apt-get install -y sshpass
+
+============================================================
+ 変数一覧
+============================================================
+  VM01_IP     = 20.63.177.124
+  VM02_IP     = 20.89.103.44
+  EC2_A_IP    = 10.0.1.161 (private)
+  NATGW_EIP_A = 52.193.165.2
+  NATGW_EIP_C = 52.198.215.194
+  EC2_C_EIP   = 13.230.83.106
+
+============================================================
+ 1. VM01 -> AWS EC2-a private IP (VPN トンネル基本疎通)
+============================================================
+  期待: 応答あり (0% packet loss)
+
+PING 10.0.1.161 (10.0.1.161) 56(84) bytes of data.
+64 bytes from 10.0.1.161: icmp_seq=1 ttl=125 time=6.68 ms
+64 bytes from 10.0.1.161: icmp_seq=2 ttl=125 time=5.67 ms
+64 bytes from 10.0.1.161: icmp_seq=3 ttl=125 time=5.61 ms
+
+--- 10.0.1.161 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2004ms
+rtt min/avg/max/mdev = 5.612/5.988/6.681/0.490 ms
+
+============================================================
+ 2. VM01 -> VM02 Public IP ICMP (NAT GW 往復経路)
+============================================================
+  期待: 応答あり (0% packet loss, TTL=46 前後)
+
+PING 20.89.103.44 (20.89.103.44) 56(84) bytes of data.
+64 bytes from 20.89.103.44: icmp_seq=1 ttl=46 time=7.80 ms
+64 bytes from 20.89.103.44: icmp_seq=2 ttl=46 time=6.74 ms
+64 bytes from 20.89.103.44: icmp_seq=3 ttl=46 time=6.96 ms
+
+--- 20.89.103.44 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2004ms
+rtt min/avg/max/mdev = 6.742/7.166/7.798/0.455 ms
+
+============================================================
+ 3. VM01 -> VM02 HTTP /whoami (Regional NAT GW 経路)
+============================================================
+  期待: remote_addr=52.193.165.2 or 52.198.215.194
+
+  結果: remote_addr=52.198.215.194
+host=tgw-regional-ngw-s2s-vm2
+  >>> OK: Regional NAT GW 経路を確認
+
+============================================================
+ 4. VM02 -> VM01 HTTP /whoami (EC2 NAT instance 経路)
+============================================================
+  期待: remote_addr=13.230.83.106
+
+  結果: remote_addr=13.230.83.106
+host=tgw-regional-ngw-s2s-vm1
+  >>> OK: EC2 NAT instance 経路を確認
+
+============================================================
+ 5. VM02 nginx アクセスログ (VM01 からのリクエスト)
+============================================================
+  期待: 先頭 IP が NAT GW EIP (52.193.165.2 or 52.198.215.194)
+
+185.177.72.61 - - [18/Apr/2026:08:44:06 +0000] "GET /.git/config HTTP/1.1" 200 56 "-" "l9explore/1.2.2"
+185.177.72.61 - - [18/Apr/2026:08:44:07 +0000] "GET /app/.git/config HTTP/1.1" 200 56 "-" "l9explore/1.2.2"
+185.177.72.61 - - [18/Apr/2026:08:44:08 +0000] "GET /data/.git/config HTTP/1.1" 200 56 "-" "l9explore/1.2.2"
+185.242.226.80 - - [18/Apr/2026:09:07:21 +0000] "GET / HTTP/1.1" 200 57 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36"
+52.198.215.194 - - [18/Apr/2026:09:07:23 +0000] "GET /whoami HTTP/1.1" 200 57 "-" "curl/7.81.0"
+
+============================================================
+ 6. VM01 nginx アクセスログ (VM02 からのリクエスト)
+============================================================
+  期待: 先頭 IP が EC2-c EIP (13.230.83.106)
+
+92.91.158.118 - - [18/Apr/2026:08:59:16 +0000] "GET / HTTP/1.0" 200 56 "-" "-"
+13.230.83.106 - - [18/Apr/2026:08:59:50 +0000] "GET /whoami HTTP/1.1" 200 56 "-" "curl/7.81.0"
+185.242.226.80 - - [18/Apr/2026:09:06:10 +0000] "GET / HTTP/1.1" 200 57 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.190 Safari/537.36"
+13.230.83.106 - - [18/Apr/2026:09:07:26 +0000] "GET /whoami HTTP/1.1" 200 56 "-" "curl/7.81.0"
+
+  次のステップ: ./log_verify.sh で AWS Flow Logs を確認

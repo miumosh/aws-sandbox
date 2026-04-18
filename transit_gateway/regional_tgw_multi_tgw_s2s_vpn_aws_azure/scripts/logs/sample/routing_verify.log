@@ -1,0 +1,120 @@
+Log: /xxx/aws-sandbox/transit_gateway/regional_tgw_multi_tgw_s2s_vpn_aws_azure/scripts/logs/routing_verify_20260418_1758.log
+============================================================
+ 1. AWS TGW サブネット RT (policy routing)
+============================================================
+  VM Public IP /32 -> NAT GW or EC2 ENI のルートが存在すること
+
+------------------------------------------------------------------------------------------------------------------------------------
+|                                                        DescribeRouteTables                                                       |
++------------------+------------------------+------------------------+------------------------+----------+-------------------------+
+|       Dest       |          Eni           |          Igw           |         NatGw          | Status   |           Tgw           |
++------------------+------------------------+------------------------+------------------------+----------+-------------------------+
+|  20.63.177.124/32|  eni-0a6432b8a429614cd |  None                  |  None                  |  active  |  None                   |
+|  20.89.103.44/32 |  None                  |  None                  |  nat-12522e133b562f6f1 |  active  |  None                   |
+|  172.16.0.0/16   |  None                  |  None                  |  None                  |  active  |  tgw-0772038b1359447b4  |
+|  10.0.0.0/16     |  None                  |  local                 |  None                  |  active  |  None                   |
+|  0.0.0.0/0       |  None                  |  igw-09c1ef699611c053b |  None                  |  active  |  None                   |
++------------------+------------------------+------------------------+------------------------+----------+-------------------------+
+
+============================================================
+ 2. AWS Regional NAT GW 自動生成 RT (de-NAT 戻りルート)
+============================================================
+  172.16.0.0/16 -> TGW のルートが存在すること (なければ de-NAT 後ドロップ)
+
+-------------------------------------------------------------------------------
+|                             DescribeRouteTables                             |
++---------------+-------------------------+---------+-------------------------+
+|     Dest      |           Igw           | Status  |           Tgw           |
++---------------+-------------------------+---------+-------------------------+
+|  172.16.0.0/16|  None                   |  active |  tgw-0772038b1359447b4  |
+|  10.0.0.0/16  |  local                  |  active |  None                   |
+|  0.0.0.0/0    |  igw-09c1ef699611c053b  |  active |  None                   |
++---------------+-------------------------+---------+-------------------------+
+
+============================================================
+ 3. AWS EC2 サブネット RT
+============================================================
+--- ec2-a ---
+-------------------------------------------------------------------------------
+|                             DescribeRouteTables                             |
++---------------+-------------------------+---------+-------------------------+
+|     Dest      |           Igw           | Status  |           Tgw           |
++---------------+-------------------------+---------+-------------------------+
+|  172.16.0.0/16|  None                   |  active |  tgw-0772038b1359447b4  |
+|  10.0.0.0/16  |  local                  |  active |  None                   |
+|  0.0.0.0/0    |  igw-09c1ef699611c053b  |  active |  None                   |
++---------------+-------------------------+---------+-------------------------+
+--- ec2-c ---
+-------------------------------------------------------------------------------
+|                             DescribeRouteTables                             |
++---------------+-------------------------+---------+-------------------------+
+|     Dest      |           Igw           | Status  |           Tgw           |
++---------------+-------------------------+---------+-------------------------+
+|  172.16.0.0/16|  None                   |  active |  tgw-0772038b1359447b4  |
+|  10.0.0.0/16  |  local                  |  active |  None                   |
+|  0.0.0.0/0    |  igw-09c1ef699611c053b  |  active |  None                   |
++---------------+-------------------------+---------+-------------------------+
+
+============================================================
+ 4. AWS TGW ルートテーブル (static routes / BGP 広告)
+============================================================
+  VM Public IP /32 -> VPC attachment の static route が存在すること
+
+------------------------------------------------------------------------------
+|                         SearchTransitGatewayRoutes                         |
++-------------------------------+--------------------+---------+-------------+
+|           AttachId            |       Dest         |  State  |    Type     |
++-------------------------------+--------------------+---------+-------------+
+|  tgw-attach-0a1a1c729f04353eb |  10.0.0.0/16       |  active |  propagated |
+|  tgw-attach-09ffabfc234f289c6 |  172.16.0.0/16     |  active |  propagated |
+|  tgw-attach-0a1a1c729f04353eb |  20.63.177.124/32  |  active |  static     |
+|  tgw-attach-0a1a1c729f04353eb |  20.89.103.44/32   |  active |  static     |
++-------------------------------+--------------------+---------+-------------+
+
+============================================================
+ 5. Azure NIC Effective Routes (VM1)
+============================================================
+  VM02_IP/32 -> VirtualNetworkGateway が Active であること
+
+Source                 State    Address Prefix    Next Hop Type          Next Hop IP
+---------------------  -------  ----------------  ---------------------  -------------
+Default                Active   172.16.0.0/16     VnetLocal
+User                   Active   20.63.177.124/32  VirtualNetworkGateway
+User                   Active   20.89.103.44/32   VirtualNetworkGateway
+User                   Active   10.0.0.0/16       VirtualNetworkGateway
+VirtualNetworkGateway  Invalid  10.0.0.0/16       VirtualNetworkGateway  20.44.169.122
+VirtualNetworkGateway  Invalid  20.63.177.124/32  VirtualNetworkGateway  20.44.169.122
+VirtualNetworkGateway  Invalid  20.89.103.44/32   VirtualNetworkGateway  20.44.169.122
+Default                Active   0.0.0.0/0         Internet
+Default                Active   10.0.0.0/8        None
+Default                Active   127.0.0.0/8       None
+Default                Active   100.64.0.0/10     None
+Default                Active   172.16.0.0/12     None
+Default                Active   25.176.0.0/13     None
+Default                Active   25.152.0.0/14     None
+Default                Active   25.184.0.0/14     None
+Default                Active   25.4.0.0/14       None
+Default                Active   25.148.0.0/15     None
+Default                Active   198.18.0.0/15     None
+Default                Active   25.150.0.0/16     None
+Default                Active   25.156.0.0/16     None
+Default                Active   25.159.0.0/16     None
+Default                Active   40.109.0.0/16     None
+Default                Active   192.168.0.0/16    None
+Default                Active   104.147.0.0/16    None
+Default                Active   157.59.0.0/16     None
+Default                Active   40.108.0.0/17     None
+Default                Active   104.146.0.0/17    None
+Default                Active   23.103.0.0/18     None
+Default                Active   20.35.252.0/22    None
+
+============================================================
+ 6. Azure UDR 定義内容
+============================================================
+AddressPrefix     HasBgpOverride    Name         NextHopType            ProvisioningState    ResourceGroup
+----------------  ----------------  -----------  ---------------------  -------------------  -----------------------
+20.63.177.124/32  False             to-peer-vm1  VirtualNetworkGateway  Succeeded            tgw-regional-ngw-s2s-rg
+20.89.103.44/32   False             to-peer-vm2  VirtualNetworkGateway  Succeeded            tgw-regional-ngw-s2s-rg
+10.0.0.0/16       False             to-aws       VirtualNetworkGateway  Succeeded            tgw-regional-ngw-s2s-rg
+
+  次のステップ: ./network_verify.sh で疎通確認

@@ -1,0 +1,82 @@
+Log: /xxx/aws-sandbox/transit_gateway/regional_tgw_multi_tgw_s2s_vpn_aws_azure/scripts/logs/vpn_verify_20260418_1757.log
+============================================================
+ 1. Terraform Outputs
+============================================================
+--- AWS ---
+aws_side_asn = 64512
+ec2_a_private_ip = "10.0.1.161"
+ec2_a_public_ip = "54.250.215.180"
+ec2_c_private_ip = "10.0.2.154"
+ec2_c_public_ip = "13.230.83.106"
+natgw_regional_eip_a = "52.193.165.2"
+natgw_regional_eip_c = "52.198.215.194"
+tgw_flow_log_group = "/aws/tgw/tgw-regional-ngw-s2s/flow"
+tgw_id = "tgw-0772038b1359447b4"
+vpc_flow_log_group = "/aws/vpc/tgw-regional-ngw-s2s/flow"
+vpc_id = "vpc-0bb009b54b2ab6688"
+vpn_tunnel1_address = "18.176.149.241"
+vpn_tunnel1_cgw_inside_address = "169.254.21.2"
+vpn_tunnel1_psk = <sensitive>
+vpn_tunnel1_vgw_inside_address = "169.254.21.1"
+vpn_tunnel2_address = "52.195.139.241"
+vpn_tunnel2_psk = <sensitive>
+
+--- Azure ---
+vm01_public_ip = "20.63.177.124"
+vm02_public_ip = "20.89.103.44"
+vm_private_ips = {
+  "vm1" = "172.16.1.4"
+  "vm2" = "172.16.1.5"
+}
+vm_public_ips = {
+  "vm1" = "20.63.177.124"
+  "vm2" = "20.89.103.44"
+}
+vnet_cidr = "172.16.0.0/16"
+vpn_gateway_public_ip = "20.44.169.122"
+
+============================================================
+ 2. VPN Tunnel Status (AWS side)
+============================================================
+-----------------------------------------------
+|           DescribeVpnConnections            |
++----------------+------------------+---------+
+|       Msg      |     Outside      | Status  |
++----------------+------------------+---------+
+|  1 BGP ROUTES  |  18.176.149.241  |  UP     |
+|  IPSEC IS DOWN |  52.195.139.241  |  DOWN   |
++----------------+------------------+---------+
+
+  判定: Tunnel 1 が UP + 'N BGP ROUTES' であれば正常
+        Tunnel 2 は active-passive のため DOWN で正常
+
+============================================================
+ 3. BGP Peer Status (Azure side)
+============================================================
+Neighbor      ASN    State      ConnectedDuration    RoutesReceived    MessagesSent    MessagesReceived
+------------  -----  ---------  -------------------  ----------------  --------------  ------------------
+169.254.21.1  64512  Connected  02:12:44.7291314     3                 918             802
+
+  判定: State=Connected, RoutesReceived > 0 であれば正常
+
+============================================================
+ 4. BGP Learned Routes (Azure side)
+============================================================
+Network           NextHop       Origin    SourcePeer     AsPath    Weight
+----------------  ------------  --------  -------------  --------  --------
+172.16.0.0/16                   Network   172.16.255.30            32768
+20.63.177.124/32  169.254.21.1  EBgp      169.254.21.1   64512     32768
+10.0.0.0/16                     Network   172.16.255.30            32768
+169.254.21.1/32                 Network   172.16.255.30            32768
+20.89.103.44/32   169.254.21.1  EBgp      169.254.21.1   64512     32768
+10.0.0.0/16       169.254.21.1  EBgp      169.254.21.1   64512     32768
+
+  判定: VM Public IP /32 が EBgp (AsPath=64512) で表示されていること
+
+============================================================
+ 5. 期待する送信元 IP サマリ
+============================================================
+  VM01 (20.63.177.124) -> VM02 (20.89.103.44) : Regional NAT GW  期待ソース: 52.193.165.2 or 52.198.215.194
+  VM02 (20.89.103.44) -> VM01 (20.63.177.124) : EC2-c NAT inst.  期待ソース: 13.230.83.106
+
+  次のステップ: ./routing_verify.sh でルートテーブルを確認

@@ -1,0 +1,275 @@
+Log: /xxx/aws-sandbox/transit_gateway/regional_tgw_multi_tgw_s2s_vpn_aws_azure/scripts/logs/get_route_all_20260418_1835.log
+取得日時: yyyy-mm-dd xx:xx:xx JST
+
+################################################################
+# AWS
+################################################################
+
+============================================================
+ A1. VPC サブネット一覧
+============================================================
+-----------------------------------------------------------------------------------------------
+|                                       DescribeSubnets                                       |
++-----------------+---------------+----------------------------+------------------------------+
+|       Az        |     Cidr      |            Id              |            Name              |
++-----------------+---------------+----------------------------+------------------------------+
+|  ap-northeast-1c|  10.0.22.0/28 |  subnet-06cd2b4d4df22854a  |  tgw-regional-ngw-s2s-tgw-c  |
+|  ap-northeast-1c|  10.0.2.0/24  |  subnet-0df1e5d2028e1dfc6  |  tgw-regional-ngw-s2s-ec2-c  |
+|  ap-northeast-1a|  10.0.1.0/24  |  subnet-036b9467cba106404  |  tgw-regional-ngw-s2s-ec2-a  |
+|  ap-northeast-1a|  10.0.11.0/28 |  subnet-00c4b13c04eb7fe6a  |  tgw-regional-ngw-s2s-tgw-a  |
++-----------------+---------------+----------------------------+------------------------------+
+
+============================================================
+ A2. VPC 内の全ルートテーブル
+============================================================
+  (明示作成 + VPC メイン RT + NAT GW 自動生成 RT を含む)
+
+------------------------------------------------------------
+  RT: rtb-02a42826ac1a64f2b
+  Name: tgw-regional-ngw-s2s-rt-ec2-a
+  関連付け (Subnet): subnet-036b9467cba106404
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+|                                                          DescribeRouteTables                                                          |
++---------------+------------------------+---------------+---------------------+-------------------+----------+-------------------------+
+|     Dest      |       GatewayId        | NatGatewayId  | NetworkInterfaceId  |      Origin       |  State   |    TransitGatewayId     |
++---------------+------------------------+---------------+---------------------+-------------------+----------+-------------------------+
+|  172.16.0.0/16|  None                  |  None         |  None               |  CreateRoute      |  active  |  tgw-0772038b1359447b4  |
+|  10.0.0.0/16  |  local                 |  None         |  None               |  CreateRouteTable |  active  |  None                   |
+|  0.0.0.0/0    |  igw-09c1ef699611c053b |  None         |  None               |  CreateRoute      |  active  |  None                   |
++---------------+------------------------+---------------+---------------------+-------------------+----------+-------------------------+
+
+------------------------------------------------------------
+  RT: rtb-02aeb1776979fabad
+  Type: VPC メインルートテーブル (暗黙作成)
+
+--------------------------------------------
+|            DescribeRouteTables           |
++---------------------+--------------------+
+|  Dest               |  10.0.0.0/16       |
+|  GatewayId          |  local             |
+|  NatGatewayId       |  None              |
+|  NetworkInterfaceId |  None              |
+|  Origin             |  CreateRouteTable  |
+|  State              |  active            |
+|  TransitGatewayId   |  None              |
++---------------------+--------------------+
+
+------------------------------------------------------------
+  RT: rtb-067017911eef307e7
+  Name: tgw-regional-ngw-s2s-rt-natgw-edge
+  関連付け: なし (孤立 RT)
+
+-----------------------------------------------------------------------------------------------------------------------------
+|                                                    DescribeRouteTables                                                    |
++---------------+------------+---------------+---------------------+-------------------+----------+-------------------------+
+|     Dest      | GatewayId  | NatGatewayId  | NetworkInterfaceId  |      Origin       |  State   |    TransitGatewayId     |
++---------------+------------+---------------+---------------------+-------------------+----------+-------------------------+
+|  172.16.0.0/16|  None      |  None         |  None               |  CreateRoute      |  active  |  tgw-0772038b1359447b4  |
+|  10.0.0.0/16  |  local     |  None         |  None               |  CreateRouteTable |  active  |  None                   |
++---------------+------------+---------------+---------------------+-------------------+----------+-------------------------+
+
+------------------------------------------------------------
+  RT: rtb-08047806cceee95cc
+  関連付け (Gateway): nat-12522e133b562f6f1
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+|                                                          DescribeRouteTables                                                          |
++---------------+------------------------+---------------+---------------------+-------------------+----------+-------------------------+
+|     Dest      |       GatewayId        | NatGatewayId  | NetworkInterfaceId  |      Origin       |  State   |    TransitGatewayId     |
++---------------+------------------------+---------------+---------------------+-------------------+----------+-------------------------+
+|  172.16.0.0/16|  None                  |  None         |  None               |  CreateRoute      |  active  |  tgw-0772038b1359447b4  |
+|  10.0.0.0/16  |  local                 |  None         |  None               |  CreateRouteTable |  active  |  None                   |
+|  0.0.0.0/0    |  igw-09c1ef699611c053b |  None         |  None               |  CreateRoute      |  active  |  None                   |
++---------------+------------------------+---------------+---------------------+-------------------+----------+-------------------------+
+
+------------------------------------------------------------
+  RT: rtb-014f4d57097bbc385
+  Name: tgw-regional-ngw-s2s-rt-ec2-c
+  関連付け (Subnet): subnet-0df1e5d2028e1dfc6
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+|                                                          DescribeRouteTables                                                          |
++---------------+------------------------+---------------+---------------------+-------------------+----------+-------------------------+
+|     Dest      |       GatewayId        | NatGatewayId  | NetworkInterfaceId  |      Origin       |  State   |    TransitGatewayId     |
++---------------+------------------------+---------------+---------------------+-------------------+----------+-------------------------+
+|  172.16.0.0/16|  None                  |  None         |  None               |  CreateRoute      |  active  |  tgw-0772038b1359447b4  |
+|  10.0.0.0/16  |  local                 |  None         |  None               |  CreateRouteTable |  active  |  None                   |
+|  0.0.0.0/0    |  igw-09c1ef699611c053b |  None         |  None               |  CreateRoute      |  active  |  None                   |
++---------------+------------------------+---------------+---------------------+-------------------+----------+-------------------------+
+
+------------------------------------------------------------
+  RT: rtb-04e2978fbeb0988bc
+  Name: tgw-regional-ngw-s2s-rt-tgw
+  関連付け (Subnet): subnet-06cd2b4d4df22854a	subnet-00c4b13c04eb7fe6a
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+|                                                                  DescribeRouteTables                                                                 |
++------------------+------------------------+------------------------+------------------------+-------------------+----------+-------------------------+
+|       Dest       |       GatewayId        |     NatGatewayId       |  NetworkInterfaceId    |      Origin       |  State   |    TransitGatewayId     |
++------------------+------------------------+------------------------+------------------------+-------------------+----------+-------------------------+
+|  20.63.177.124/32|  None                  |  None                  |  eni-0a6432b8a429614cd |  CreateRoute      |  active  |  None                   |
+|  20.89.103.44/32 |  None                  |  nat-12522e133b562f6f1 |  None                  |  CreateRoute      |  active  |  None                   |
+|  172.16.0.0/16   |  None                  |  None                  |  None                  |  CreateRoute      |  active  |  tgw-0772038b1359447b4  |
+|  10.0.0.0/16     |  local                 |  None                  |  None                  |  CreateRouteTable |  active  |  None                   |
+|  0.0.0.0/0       |  igw-09c1ef699611c053b |  None                  |  None                  |  CreateRoute      |  active  |  None                   |
++------------------+------------------------+------------------------+------------------------+-------------------+----------+-------------------------+
+
+
+============================================================
+ A3. Regional NAT GW 情報
+============================================================
+  NAT GW ID:       nat-12522e133b562f6f1
+  自動生成 RT ID:  rtb-08047806cceee95cc
+
+  上記 RT は A2 セクション内で rtb-08047806cceee95cc として出力済み
+  関連付け (Gateway) に nat-12522e133b562f6f1 が表示されていれば NAT GW の自動生成 RT
+
+============================================================
+ A4. TGW Attachment 一覧
+============================================================
+--------------------------------------------------------------------------------
+|                       DescribeTransitGatewayAttachments                      |
++-------------------------------+-------------------------+------------+-------+
+|              Id               |       ResourceId        |   State    | Type  |
++-------------------------------+-------------------------+------------+-------+
+|  tgw-attach-0a1a1c729f04353eb |  vpc-0bb009b54b2ab6688  |  available |  vpc  |
+|  tgw-attach-09ffabfc234f289c6 |  vpn-060cf7d11590a07be  |  available |  vpn  |
++-------------------------------+-------------------------+------------+-------+
+
+============================================================
+ A5. TGW ルートテーブル
+============================================================
+  TGW Default RT: tgw-rtb-0b333e7a79af6a695
+
+----------------------------------------------------------------------------------------------
+|                                 SearchTransitGatewayRoutes                                 |
++-------------------------------+-------------------+---------------+---------+--------------+
+|           AttachId            |       Dest        | ResourceType  |  State  |    Type      |
++-------------------------------+-------------------+---------------+---------+--------------+
+|  tgw-attach-0a1a1c729f04353eb |  10.0.0.0/16      |  vpc          |  active |  propagated  |
+|  tgw-attach-09ffabfc234f289c6 |  172.16.0.0/16    |  vpn          |  active |  propagated  |
+|  tgw-attach-0a1a1c729f04353eb |  20.63.177.124/32 |  vpc          |  active |  static      |
+|  tgw-attach-0a1a1c729f04353eb |  20.89.103.44/32  |  vpc          |  active |  static      |
++-------------------------------+-------------------+---------------+---------+--------------+
+
+################################################################
+# Azure
+################################################################
+
+============================================================
+ B1. UDR (Route Table) 定義内容
+============================================================
+AddressPrefix     HasBgpOverride    Name         NextHopType            ProvisioningState    ResourceGroup
+----------------  ----------------  -----------  ---------------------  -------------------  -----------------------
+20.63.177.124/32  False             to-peer-vm1  VirtualNetworkGateway  Succeeded            tgw-regional-ngw-s2s-rg
+20.89.103.44/32   False             to-peer-vm2  VirtualNetworkGateway  Succeeded            tgw-regional-ngw-s2s-rg
+10.0.0.0/16       False             to-aws       VirtualNetworkGateway  Succeeded            tgw-regional-ngw-s2s-rg
+
+============================================================
+ B2. VM1 NIC Effective Routes
+============================================================
+  (UDR + BGP + Azure System Route の実効値)
+
+Source                 State    Address Prefix    Next Hop Type          Next Hop IP
+---------------------  -------  ----------------  ---------------------  -------------
+Default                Active   172.16.0.0/16     VnetLocal
+User                   Active   20.63.177.124/32  VirtualNetworkGateway
+User                   Active   20.89.103.44/32   VirtualNetworkGateway
+User                   Active   10.0.0.0/16       VirtualNetworkGateway
+VirtualNetworkGateway  Invalid  10.0.0.0/16       VirtualNetworkGateway  20.44.169.122
+VirtualNetworkGateway  Invalid  20.63.177.124/32  VirtualNetworkGateway  20.44.169.122
+VirtualNetworkGateway  Invalid  20.89.103.44/32   VirtualNetworkGateway  20.44.169.122
+Default                Active   0.0.0.0/0         Internet
+Default                Active   10.0.0.0/8        None
+Default                Active   127.0.0.0/8       None
+Default                Active   100.64.0.0/10     None
+Default                Active   172.16.0.0/12     None
+Default                Active   25.176.0.0/13     None
+Default                Active   25.152.0.0/14     None
+Default                Active   25.184.0.0/14     None
+Default                Active   25.4.0.0/14       None
+Default                Active   25.148.0.0/15     None
+Default                Active   198.18.0.0/15     None
+Default                Active   25.150.0.0/16     None
+Default                Active   25.156.0.0/16     None
+Default                Active   25.159.0.0/16     None
+Default                Active   40.109.0.0/16     None
+Default                Active   192.168.0.0/16    None
+Default                Active   104.147.0.0/16    None
+Default                Active   157.59.0.0/16     None
+Default                Active   40.108.0.0/17     None
+Default                Active   104.146.0.0/17    None
+Default                Active   23.103.0.0/18     None
+Default                Active   20.35.252.0/22    None
+
+============================================================
+ B3. VM2 NIC Effective Routes
+============================================================
+Source                 State    Address Prefix    Next Hop Type          Next Hop IP
+---------------------  -------  ----------------  ---------------------  -------------
+Default                Active   172.16.0.0/16     VnetLocal
+User                   Active   20.63.177.124/32  VirtualNetworkGateway
+User                   Active   20.89.103.44/32   VirtualNetworkGateway
+User                   Active   10.0.0.0/16       VirtualNetworkGateway
+VirtualNetworkGateway  Invalid  10.0.0.0/16       VirtualNetworkGateway  20.44.169.122
+VirtualNetworkGateway  Invalid  20.63.177.124/32  VirtualNetworkGateway  20.44.169.122
+VirtualNetworkGateway  Invalid  20.89.103.44/32   VirtualNetworkGateway  20.44.169.122
+Default                Active   0.0.0.0/0         Internet
+Default                Active   10.0.0.0/8        None
+Default                Active   127.0.0.0/8       None
+Default                Active   100.64.0.0/10     None
+Default                Active   172.16.0.0/12     None
+Default                Active   25.176.0.0/13     None
+Default                Active   25.152.0.0/14     None
+Default                Active   25.184.0.0/14     None
+Default                Active   25.4.0.0/14       None
+Default                Active   25.148.0.0/15     None
+Default                Active   198.18.0.0/15     None
+Default                Active   25.150.0.0/16     None
+Default                Active   25.156.0.0/16     None
+Default                Active   25.159.0.0/16     None
+Default                Active   40.109.0.0/16     None
+Default                Active   192.168.0.0/16    None
+Default                Active   104.147.0.0/16    None
+Default                Active   157.59.0.0/16     None
+Default                Active   40.108.0.0/17     None
+Default                Active   104.146.0.0/17    None
+Default                Active   23.103.0.0/18     None
+Default                Active   20.35.252.0/22    None
+
+============================================================
+ B4. VPN Gateway BGP Learned Routes
+============================================================
+Network           NextHop       Origin    SourcePeer     AsPath    Weight
+----------------  ------------  --------  -------------  --------  --------
+172.16.0.0/16                   Network   172.16.255.30            32768
+20.63.177.124/32  169.254.21.1  EBgp      169.254.21.1   64512     32768
+10.0.0.0/16                     Network   172.16.255.30            32768
+169.254.21.1/32                 Network   172.16.255.30            32768
+20.89.103.44/32   169.254.21.1  EBgp      169.254.21.1   64512     32768
+10.0.0.0/16       169.254.21.1  EBgp      169.254.21.1   64512     32768
+
+============================================================
+ B5. VPN Gateway BGP Advertised Routes (to AWS)
+============================================================
+Network        NextHop       Origin    SourcePeer    AsPath    Weight
+-------------  ------------  --------  ------------  --------  --------
+172.16.0.0/16  169.254.21.2  Igp                     65515     0
+
+============================================================
+ B6. NSG ルール一覧
+============================================================
+Name                         ResourceGroup            Priority    SourcePortRanges    SourceAddressPrefixes                        SourceASG    Access    Protocol    Direction    DestinationPortRanges    DestinationAddressPrefixes    DestinationASG
+---------------------------  -----------------------  ----------  ------------------  -------------------------------------------  -----------  --------  ----------  -----------  -----------------------  ----------------------------  ----------------
+allow-ssh-from-vnet-and-aws  tgw-regional-ngw-s2s-rg  110         *                   10.0.0.0/16 219.28.249.131/32 172.16.0.0/16  None         Allow     Tcp         Inbound      22                       *                             None
+allow-icmp                   tgw-regional-ngw-s2s-rg  100         *                   *                                            None         Allow     Icmp        Inbound      *                        *                             None
+allow-http                   tgw-regional-ngw-s2s-rg  120         *                   *                                            None         Allow     Tcp         Inbound      80                       *                             None
+
+============================================================
+ B7. GatewaySubnet の Effective Routes (System Routes)
+============================================================
+  (GatewaySubnet には NIC がないため直接取得不可。
+   BGP learned/advertised routes で代替確認済み)
+
+  完了。サマリは check_route_table_summary.md として別途作成

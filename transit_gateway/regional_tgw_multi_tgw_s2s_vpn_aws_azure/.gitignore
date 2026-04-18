@@ -1,0 +1,44 @@
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+*.terraform.lock.hcl
+crash.log
+crash.*.log
+
+# Local tfvars (may contain secrets)
+*.tfvars
+*.tfvars.json
+!*.tfvars.sample
+
+# Plan output
+*.tfplan
+
+# CLI override
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI config
+.terraformrc
+terraform.rc
+
+# Execution logs (keep dirs, ignore contents except sample/)
+**/logs/**
+!**/logs/.gitkeep
+!**/logs/sample/
+!**/logs/sample/**
+
+# Editor / OS
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Claude Code
+**/.claude/
+
+# Request files for Claude Code
+**/.claude_request/

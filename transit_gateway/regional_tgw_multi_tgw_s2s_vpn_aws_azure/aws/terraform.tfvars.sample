@@ -1,0 +1,18 @@
+# ====== AWS 側 Terraform 変数サンプル ======
+# cp terraform.tfvars.sample terraform.tfvars して編集
+
+# SSH パスワード認証用 (ec2-user のパスワード)
+# 要件: 最低 8 文字、英大小数記号混在
+ec2_password = "Passw0rd!"
+
+# SSH 接続元 IP (必要なら自分の Global IP/32)
+my_ip_cidr = "0.0.0.0/0"
+
+# key pair を使わない場合は空のまま
+# key_name = "my-keypair"
+
+# --- 段階 3 (Azure apply 完了後に設定) ---
+# azure_vpn_gateway_public_ip = "xxx.xxx.xxx.xxx"
+# azure_vnet_cidr             = "172.16.0.0/16"
+# azure_vm01_public_ip        = "xxx.xxx.xxx.xxx"
+# azure_vm02_public_ip        = "xxx.xxx.xxx.xxx"
